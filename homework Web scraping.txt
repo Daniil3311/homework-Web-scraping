@@ -1,0 +1,73 @@
+from pprint import pprint
+import requests
+from bs4 import BeautifulSoup
+import re
+from fake_headers import Headers
+import string
+
+headers = Headers(os='win', browser='chrome')
+hh = 'https://spb.hh.ru/search/vacancy?text=python&area=1&area=2'
+hh1 = 'https://spb.hh.ru/search/vacancy?text=python&area=2&area=1'
+hh_ARTICLES = f'{hh}/ru/all'
+hh_ARTICLES1 = f'{hh1}/ru/all'
+
+def get_page(url):
+
+    return requests.get(url, headers=headers.generate())
+
+
+
+def parsers(pars):
+    main_html = get_page(hh_ARTICLES).text
+    soup = BeautifulSoup(main_html, features='lxml')
+
+
+    link=pars. find(class_="serp-item__title")['href']
+    salary = pars.find(class_="vacancy-serp-item-body__main-info").find('span', class_="bloko-header-section-3")
+    salary1 = 'Не указанна'
+    if salary:
+        salary1 = salary.text
+    campany = pars.find(class_="bloko-link bloko-link_kind-tertiary").text.strip()
+    city = pars.find(class_="vacancy-serp-item-company").find_all('div', class_="bloko-text")[1]
+    city1 = (city. text)
+    ss = salary1.encode('utf-8')
+    sss=ss.decode('ascii', 'ignore')
+    description = pars.find(class_="g-user-content").text
+    if'Django' and 'Flask' in description :
+
+       return {
+        'link': link,
+        'salary': (f'{sss}руб'),
+        'campany': campany.replace(u'\xa0', ' '),
+        'city': city1
+       }
+
+
+
+def main(nam_page):
+    get_page(f'{hh_ARTICLES}page{nam_page}/').text
+    main_html=get_page(hh_ARTICLES).text
+    soup=BeautifulSoup(main_html, features='lxml')
+    vak=soup.find_all(class_="serp-item")
+    print(nam_page)
+
+    get_page(f'{hh_ARTICLES1}page{nam_page}/').text
+    main_html1 = get_page(hh_ARTICLES1).text
+    soup1 = BeautifulSoup(main_html1, features='lxml')
+    vak1 = soup1.find_all(class_="serp-item")
+    print(nam_page)
+
+
+    for va1 in vak1:
+         par1=parsers(va1)
+         pprint(par1)
+
+
+    for va in vak:
+        par=parsers(va)
+        pprint(par)
+
+
+def main1():
+    for i in range(1, 3):
+        main(i)
